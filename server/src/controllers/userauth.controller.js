@@ -44,8 +44,24 @@ const pickAddressFields = (data) => ({
 });
 
 const serverError = (res, err) => {
-  console.error(err);
-  res.status(500).json({ message: 'Something went wrong' });
+  console.error('User authentication error:', err);
+
+  // Mongoose's unique index can still be hit during simultaneous requests.
+  // Return a useful, safe response instead of exposing it as a generic 500.
+  if (err?.code === 11000) {
+    return res.status(409).json({ message: 'An account with this email already exists. Please sign in instead.' });
+  }
+
+  if (err?.name === 'ValidationError') {
+    const firstError = Object.values(err.errors || {})[0];
+    return res.status(400).json({ message: firstError?.message || 'Please check the details you entered.' });
+  }
+
+  // Returning detail in development makes local API failures diagnosable;
+  // production clients still receive a safe, generic message.
+  res.status(500).json({
+    message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : (err?.message || 'Something went wrong')
+  });
 };
 
 

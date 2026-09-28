@@ -1,122 +1,96 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import React, { Suspense, useEffect } from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 
-function App() {
-  const [count, setCount] = useState(0)
+/**
+ * Enhanced lazy loader with preloading capabilities.
+ * Allows routes to be preloaded in idle time or on hover for 0ms transition delay.
+ */
+const lazyWithPreload = (factory) => {
+  const Component = React.lazy(factory);
+  Component.preload = factory;
+  return Component;
+};
+
+// Dynamic Route Chunk Definitions
+const Home = lazyWithPreload(() => import('./pages/Home'));
+const UserLogin = lazyWithPreload(() => import('./pages/UserLogin'));
+const UserRegister = lazyWithPreload(() => import('./pages/UserRegister'));
+const UserHomeDashboard = lazyWithPreload(() => import('./pages/UserHomeDashboard'));
+const AdminLogin = lazyWithPreload(() => import('./pages/AdminLogin'));
+const Adminregister = lazyWithPreload(() => import('./pages/Adminregister'));
+const AdminHomeDashboard = lazyWithPreload(() => import('./pages/AdminHomeDashboard'));
+const NotFound = lazyWithPreload(() => import('./pages/NotFound'));
+
+// Sleek, high-performance suspense fallback spinner/progress bar
+const PageLoader = () => (
+  <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="absolute top-0 left-0 right-0 h-1 bg-slate-800">
+      <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse w-3/4"></div>
+    </div>
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-10 h-10 border-3 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"></div>
+      <span className="text-xs font-mono text-slate-400 tracking-wider">LOADING ROUTE...</span>
+    </div>
+  </div>
+);
+
+const App = () => {
+  useEffect(() => {
+    // Intelligent Background Preloading: Fetch route chunks during idle browser time
+    const preloadAllRoutes = () => {
+      Home.preload();
+      UserLogin.preload();
+      UserRegister.preload();
+      UserHomeDashboard.preload();
+      AdminLogin.preload();
+      Adminregister.preload();
+      AdminHomeDashboard.preload();
+      NotFound.preload();
+    };
+
+    if ('requestIdleCallback' in window) {
+      const handle = window.requestIdleCallback(preloadAllRoutes, { timeout: 2000 });
+      return () => window.cancelIdleCallback(handle);
+    } else {
+      const timer = setTimeout(preloadAllRoutes, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <Router>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Main Landing Route */}
+          <Route path="/" element={<Home />} />
 
-      <div className="ticks"></div>
+          {/* User Auth & Dashboard Routes */}
+          <Route path="/user/login" element={<UserLogin />} />
+          <Route path="/user/register" element={<UserRegister />} />
+          <Route path="/user/dashboard" element={<UserHomeDashboard />} />
+          <Route path="/userhomedashboard" element={<UserHomeDashboard />} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {/* Admin Auth & Dashboard Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/register" element={<Adminregister />} />
+          <Route path="/admin/dashboard" element={<AdminHomeDashboard />} />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
-}
+          {/* Legacy or Redirect Aliases for Fast Fallback */}
+          <Route path="/login" element={<Navigate to="/user/login" replace />} />
+          <Route path="/register" element={<Navigate to="/user/register" replace />} />
+          <Route path="/dashboard" element={<Navigate to="/userhomedashboard" replace />} />
 
-export default App
+          {/* 404 Catch-All Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </Router>
+  );
+};
+
+export default App;

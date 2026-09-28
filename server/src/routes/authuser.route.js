@@ -25,6 +25,7 @@ const registerRules = [
     body('name').trim().notEmpty().withMessage('Name is required')
         .isLength({ min: 2, max: 50 }).withMessage('Name must be 2-50 characters'),
     emailRule,
+    body('phone').trim().matches(/^\d{10}$/).withMessage('A valid 10-digit phone number is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
 ];
 

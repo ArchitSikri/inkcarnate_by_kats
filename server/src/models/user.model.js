@@ -24,10 +24,12 @@ const userSchema = new mongoose.Schema({
     isBlocked: { type: Boolean, default: false }
 }, { timestamps: true });
 
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password') || !this.password) return next();
+// Mongoose 9 runs async middleware as promise-based hooks, so no `next`
+// callback is provided. Calling it caused registration to fail with
+// "next is not a function" after hashing the password.
+userSchema.pre('save', async function () {
+    if (!this.isModified('password') || !this.password) return;
     this.password = await bcrypt.hash(this.password, 10);
-    next();
 });
 
 userSchema.methods.comparePassword = function (enteredPassword) {

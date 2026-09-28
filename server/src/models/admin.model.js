@@ -7,10 +7,10 @@ const adminSchema = new mongoose.Schema({
     password: { type: String, required: true, minlength: 8 }
 }, { timestamps: true });
 
-adminSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
+// Keep this promise-based for Mongoose 9 compatibility as well.
+adminSchema.pre('save', async function () {
+    if (!this.isModified('password')) return;
     this.password = await bcrypt.hash(this.password, 10);
-    next();
 });
 
 adminSchema.methods.comparePassword = function (enteredPassword) {
